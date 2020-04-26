@@ -1,5 +1,6 @@
 import os
 import csv
+import string
 import argparse
 from pathlib import Path
 
@@ -36,6 +37,13 @@ csv_reader = csv.reader(f, delimiter=',')
 BOOKS = list(csv_reader)[1:] 
 f.close()
 
+# remove illegal characters and make sure the length is below 255
+# inspired by https://gist.github.com/seanh/93666
+def clean_filename(s):
+    valid_chars = f'-_.,() {string.ascii_letters}{string.digits}'
+    s = ''.join(c for c in s if c in valid_chars)
+    return s[:250]
+
 def main(categories, inverse=False):
     if inverse:
         categories = [c for c in range(21) if c not in categories]
@@ -50,12 +58,14 @@ def main(categories, inverse=False):
             # download pdf
             pdf_url = r.url.replace('/book/', '/content/pdf/') + '.pdf'
             if requests.head(pdf_url).status_code == 200:
-                wget.download(pdf_url, out=f'{directory}/{book[0]} - {book[1]}.pdf', bar=None)
+                file_name = clean_filename(f'{book[0]} - {book[1]}') + '.pdf'
+                wget.download(pdf_url, out=f'{directory}/{file_name}', bar=None)
 
             # download epub
             epub_url = r.url.replace('/book/', '/download/epub/') + '.epub'
             if requests.head(epub_url).status_code == 200:
-                wget.download(epub_url, out=f'{directory}/{book[0]} - {book[1]}.epub', bar=None)
+                file_name = clean_filename(f'{book[0]} - {book[1]}') + '.epub'
+                wget.download(epub_url, out=f'{directory}/{file_name}', bar=None)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
