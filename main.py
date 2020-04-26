@@ -5,29 +5,30 @@ from pathlib import Path
 
 import wget
 import requests
+from tqdm import tqdm
 
 PATH = Path(os.path.dirname(os.path.abspath(__file__))) / "Textbooks"
 CATEGORIES = [
-    'Literature, Cultural and Media Studies', 
-    'Biomedical and Life Sciences', 
-    'Earth and Environmental Science', 
-    'Humanities, Social Sciences and Law', 
-    'Law and Criminology', 
-    'Computer Science', 
-    'Religion and Philosophy', 
-    'Behavioral Science', 
-    'Business and Economics', 
-    'Behavioral Science and Psychology', 
-    'Chemistry and Materials Science', 
-    'Engineering', 'Mathematics and Statistics', 
-    'Business and Management', 
-    'Physics and Astronomy', 
-    'Medicine', 
-    'Intelligent Technologies and Robotics', 
-    'Energy', 
-    'Social Sciences', 
-    'Economics and Finance', 
-    'Education'
+    'Behavioral Science',
+    'Behavioral Science and Psychology',
+    'Biomedical and Life Sciences',
+    'Business and Economics', 'Business and Management',
+    'Chemistry and Materials Science',
+    'Computer Science',
+    'Earth and Environmental Science',
+    'Economics and Finance',
+    'Education',
+    'Energy',
+    'Engineering',
+    'Humanities, Social Sciences and Law',
+    'Intelligent Technologies and Robotics',
+    'Law and Criminology',
+    'Literature, Cultural and Media Studies',
+    'Mathematics and Statistics',
+    'Medicine',
+    'Physics and Astronomy',
+    'Religion and Philosophy',
+    'Social Sciences'
 ]
 
 f = open('textbooks.csv', encoding='utf-8')
@@ -41,19 +42,20 @@ def main(categories, inverse=False):
 
     for c in categories:
         c_package = CATEGORIES[c]
+        print(f'Downloading {c_package}...')
         directory = str(PATH / c_package)
         Path(directory).mkdir(parents=True, exist_ok=True)
-        for book in [book for book in BOOKS if book[11] == c_package]:
+        for book in tqdm([book for book in BOOKS if book[11] == c_package]):
             r = requests.get(book[18])
             # download pdf
             pdf_url = r.url.replace('/book/', '/content/pdf/') + '.pdf'
             if requests.head(pdf_url).status_code == 200:
-                wget.download(pdf_url, out=f'{directory}/{book[0]} - {book[1]}.pdf')
+                wget.download(pdf_url, out=f'{directory}/{book[0]} - {book[1]}.pdf', bar=None)
 
             # download epub
             epub_url = r.url.replace('/book/', '/download/epub/') + '.epub'
             if requests.head(epub_url).status_code == 200:
-                wget.download(epub_url, out=f'{directory}/{book[0]} - {book[1]}.epub')
+                wget.download(epub_url, out=f'{directory}/{book[0]} - {book[1]}.epub', bar=None)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
